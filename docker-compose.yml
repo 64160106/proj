@@ -1,0 +1,50 @@
+services:
+  server:
+    build:
+      context: .
+    restart: unless-stopped
+    env_file:
+      - ./.env
+    environment:
+      - DB_HOST=db
+      - DB_USER=$MYSQLDB_USER
+      - DB_PASSWORD=$MYSQLDB_ROOT_PASSWORD
+      - DB_NAME=$MYSQLDB_DATABASE
+      - DB_PORT=$MYSQLDB_DOCKER_PORT
+    ports:
+      - $NODE_DOCKER_PORT:$NODE_DOCKER_PORT
+    stdin_open: true
+    tty: true
+    volumes:
+      - vol-server:/usr/src/app
+    command: npm start
+    depends_on:
+      - db
+      
+  db:
+    image: mysql
+    restart: always
+    env_file:
+      - ./.env
+    environment:
+      - MYSQL_ROOT_PASSWORD=$MYSQLDB_ROOT_PASSWORD
+      - MYSQL_DATABASE=$MYSQLDB_DATABASE
+    ports:
+      - $MYSQLDB_DOCKER_PORT:$MYSQLDB_DOCKER_PORT
+    volumes:
+      - db-data:/var/lib/mysql
+    
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    restart: always
+    ports:
+      - $PHP_MYSQL_PORT:80
+    environment:
+      - PMA_HOST=db
+      - PMA_PORT=3306
+    depends_on:
+      - db
+    
+volumes:
+  db-data:
+  vol-server:
